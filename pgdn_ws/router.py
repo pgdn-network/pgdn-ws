@@ -35,7 +35,7 @@ def create_websocket_router(
                 return
             
             user_info = await auth_fn(token)
-            logger.info(f"Auth result: {user_info}")
+            logger.info(f"Auth result: {user_info.get('user_id')}")
             
             if not user_info:
                 logger.warning("Auth failed - invalid token")
