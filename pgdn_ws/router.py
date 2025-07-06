@@ -43,7 +43,7 @@ def create_websocket_router(
                 return
             
             # Connect
-            logger.info(f"Connecting user: {user_info}")
+            logger.info(f"Connecting user: {user_info.get('user_id')}")
             await notification_manager.connect(websocket, user_info)
             
             # Handle messages

@@ -173,6 +173,56 @@ class NotificationManager:
         
         await asyncio.gather(*tasks, return_exceptions=True)
     
+    # Sync methods for synchronous contexts
+    def send_to_user_sync(self, user_id: str, message: NotificationMessage):
+        """Send notification to specific user (sync version)"""
+        try:
+            asyncio.run(self.send_to_user(user_id, message))
+        except RuntimeError:
+            # If we're already in an event loop, create a new one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.send_to_user(user_id, message))
+            finally:
+                loop.close()
+    
+    def send_to_users_sync(self, user_ids: List[str], message: NotificationMessage):
+        """Send notification to multiple users (sync version)"""
+        try:
+            asyncio.run(self.send_to_users(user_ids, message))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.send_to_users(user_ids, message))
+            finally:
+                loop.close()
+    
+    def send_to_group_sync(self, group_id: str, message: NotificationMessage):
+        """Send notification to all users in a group (sync version)"""
+        try:
+            asyncio.run(self.send_to_group(group_id, message))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.send_to_group(group_id, message))
+            finally:
+                loop.close()
+    
+    def broadcast_sync(self, message: NotificationMessage, exclude_users: Optional[List[str]] = None):
+        """Broadcast to all connected users (sync version)"""
+        try:
+            asyncio.run(self.broadcast(message, exclude_users))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.broadcast(message, exclude_users))
+            finally:
+                loop.close()
+    
     def register_handler(self, message_type: str, handler: MessageHandler):
         """Register a custom message handler"""
         self._message_handlers[message_type] = handler

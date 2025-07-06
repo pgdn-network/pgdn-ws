@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Notify WS - Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .token-input-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 300px;
+            margin-bottom: 20px;
+        }
+        input[type="text"], textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button.primary {
+            background-color: #2196F3;
+            color: white;
+        }
+        button.secondary {
+            background-color: #757575;
+            color: white;
+        }
+        button.success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .messages {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+        .message {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            background-color: white;
+            border-left: 4px solid #2196F3;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .message.error {
+            border-left-color: #f44336;
+            background-color: #ffebee;
+        }
+        .message.success {
+            border-left-color: #4CAF50;
+            background-color: #e8f5e9;
+        }
+        .message.warning {
+            border-left-color: #ff9800;
+            background-color: #fff3e0;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .message-type {
+            font-weight: 600;
+            color: #333;
+        }
+        .message-time {
+            font-size: 12px;
+            color: #666;
+        }
+        .message-content {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .test-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f4f8;
+            border-radius: 8px;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .info-box {
+            background-color: #e3f2fd;
+            border: 1px solid #2196F3;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 FastAPI Notify WebSocket Test</h1>
+        
+        <div class="info-box">
+            <h3>Connection Info</h3>
+            <p>WebSocket URL: <span class="code">ws://localhost:8000/ws?token=YOUR_TOKEN</span></p>
+            <p>Make sure your FastAPI server is running with the WebSocket endpoint configured.</p>
+        </div>
+        
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div class="token-input-group">
+            <input type="text" id="token" placeholder="Paste your JWT token here..." value="">
+            <button class="primary" onclick="connect()">Connect</button>
+            <button class="secondary" onclick="disconnect()">Disconnect</button>
+        </div>
+        
+        <h3>📨 Messages</h3>
+        <div id="messages" class="messages"></div>
+        
+        <div class="test-section">
+            <h3>🧪 Test Notifications</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <label>User ID (must match token):</label>
+                <input type="text" id="userId" placeholder="e.g., user-123 or actual user ID" style="width: 300px; margin-top: 5px;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label>Test Message:</label>
+                <textarea id="testMessage" placeholder="Enter notification message...">{
+  "message": "Hello from test page!",
+  "timestamp": "2025-01-07T10:00:00Z"
+}</textarea>
+            </div>
+            
+            <div class="test-controls">
+                <button class="success" onclick="sendPing()">Send Ping</button>
+                <button class="primary" onclick="sendCustomMessage()">Send Custom Message</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let reconnectTimeout = null;
+        let messageCount = 0;
+
+        function updateStatus(status, text) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = text || status.charAt(0).toUpperCase() + status.slice(1);
+        }
+
+        function addMessage(data, type = 'info') {
+            const messagesEl = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            
+            const time = new Date().toLocaleTimeString();
+            const messageType = data.type || 'unknown';
+            
+            messageEl.innerHTML = `
+                <div class="message-header">
+                    <span class="message-type">${messageType}</span>
+                    <span class="message-time">${time}</span>
+                </div>
+                <div class="message-content">${JSON.stringify(data, null, 2)}</div>
+            `;
+            
+            messagesEl.appendChild(messageEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            messageCount++;
+            
+            // Limit messages to prevent memory issues
+            if (messageCount > 100) {
+                messagesEl.removeChild(messagesEl.firstChild);
+                messageCount--;
+            }
+        }
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addMessage({ message: 'Already connected' }, 'warning');
+                return;
+            }
+
+            const token = document.getElementById('token').value.trim();
+            if (!token) {
+                alert('Please enter a token');
+                return;
+            }
+
+            updateStatus('connecting', 'Connecting...');
+            
+            const wsUrl = `ws://localhost:8000/ws?token=${encodeURIComponent(token)}`;
+            console.log('Connecting to:', wsUrl);
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    console.log('WebSocket connected');
+                    updateStatus('connected');
+                    addMessage({ type: 'system', message: 'Connected successfully' }, 'success');
+                    
+                    // Clear any reconnect timeout
+                    if (reconnectTimeout) {
+                        clearTimeout(reconnectTimeout);
+                        reconnectTimeout = null;
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('Received:', data);
+                        
+                        // Determine message type for styling
+                        let messageType = 'info';
+                        if (data.type === 'error') messageType = 'error';
+                        else if (data.type === 'success' || data.type === 'connection') messageType = 'success';
+                        else if (data.type === 'warning') messageType = 'warning';
+                        
+                        addMessage(data, messageType);
+                    } catch (error) {
+                        console.error('Failed to parse message:', error);
+                        addMessage({ 
+                            type: 'parse_error', 
+                            message: event.data,
+                            error: error.message 
+                        }, 'error');
+                    }
+                };
+
+                ws.onclose = (event) => {
+                    console.log('WebSocket closed:', event.code, event.reason);
+                    updateStatus('disconnected');
+                    
+                    if (event.code === 1008) {
+                        addMessage({ 
+                            type: 'auth_error', 
+                            message: 'Authentication failed. Check your token.',
+                            code: event.code,
+                            reason: event.reason 
+                        }, 'error');
+                    } else {
+                        addMessage({ 
+                            type: 'disconnected', 
+                            message: `Connection closed: ${event.reason || 'Unknown reason'}`,
+                            code: event.code 
+                        }, 'warning');
+                    }
+                    
+                    ws = null;
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    addMessage({ 
+                        type: 'connection_error', 
+                        message: 'Failed to connect. Is the server running?' 
+                    }, 'error');
+                };
+
+            } catch (error) {
+                console.error('Failed to create WebSocket:', error);
+                updateStatus('disconnected');
+                addMessage({ 
+                    type: 'error', 
+                    message: `Failed to connect: ${error.message}` 
+                }, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close(1000, 'User disconnect');
+                ws = null;
+            }
+            updateStatus('disconnected');
+        }
+
+        function sendPing() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected');
+                return;
+            }
+
+            const message = {
+                type: 'ping',
+                timestamp: Date.now()
+            };
+
+            ws.send(JSON.stringify(message));
+            addMessage({ type: 'sent', payload: message }, 'info');
+        }
+
+        function sendCustomMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected');
+                return;
+            }
+
+            const messageText = document.getElementById('testMessage').value;
+            try {
+                const message = JSON.parse(messageText);
+                ws.send(JSON.stringify(message));
+                addMessage({ type: 'sent', payload: message }, 'info');
+            } catch (error) {
+                alert('Invalid JSON: ' + error.message);
+            }
+        }
+
+        // Example token for testing
+        document.getElementById('token').placeholder = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+        
+        // Auto-focus token input
+        document.getElementById('token').focus();
+    </script>
+</body>
+</html>

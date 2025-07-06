@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="pgdn-ws",
-    version="0.1.0",
+    version="0.2.0",
     author="DePIN Team",
     author_email="team@depin.io",
     description="WebSocket notification library for FastAPI applications",
@@ -14,7 +14,7 @@ setup(
     url="https://github.com/yourusername/pgdn-ws",
     packages=find_packages(),
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: MIT License",

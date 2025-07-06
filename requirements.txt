@@ -1,3 +1,10 @@
 fastapi>=0.68.0
 websockets>=10.0
 pydantic>=1.8.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.18.0
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950
