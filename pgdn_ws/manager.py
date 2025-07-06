@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, UTC
 from .types import NotificationMessage, MessageHandler
 
-logger = logging.getLogger("pgdn-notify")
+logger = logging.getLogger("pgdn-ws")
 
 class NotificationManager:
     def __init__(self):
