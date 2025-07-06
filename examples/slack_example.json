@@ -1,0 +1,9 @@
+{
+  "type": "slack",
+  "body": "🚨 System Alert: High CPU usage detected on server-01 (85%)",
+  "meta": {
+    "channel": "#alerts",
+    "username": "AlertBot",
+    "icon_emoji": ":warning:"
+  }
+} 

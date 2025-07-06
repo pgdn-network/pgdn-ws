@@ -1,0 +1,23 @@
+{
+  "type": "webhook",
+  "body": {
+    "event_type": "deployment",
+    "status": "success",
+    "environment": "production",
+    "version": "1.2.3",
+    "timestamp": "2025-01-21T09:00:00Z",
+    "details": {
+      "deployed_by": "automated-pipeline",
+      "duration": "2m 35s",
+      "services_updated": ["api", "web", "worker"]
+    }
+  },
+  "meta": {
+    "url": "https://api.company.com/webhooks/deployment",
+    "headers": {
+      "X-API-Key": "your-api-key-here",
+      "Content-Type": "application/json"
+    },
+    "timeout": 30
+  }
+} 

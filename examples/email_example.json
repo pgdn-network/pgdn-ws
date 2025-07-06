@@ -1,0 +1,9 @@
+{
+  "type": "email",
+  "body": "Daily security scan completed successfully.\n\nSummary:\n- Scanned: 1,247 ports\n- Vulnerabilities: 0\n- Status: CLEAN\n\nNext scan: Tomorrow at 3:00 AM",
+  "meta": {
+    "to": "security@company.com",
+    "subject": "Daily Security Scan Report",
+    "from": "alerts@company.com"
+  }
+} 

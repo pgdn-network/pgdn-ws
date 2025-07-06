@@ -1,0 +1,19 @@
+{
+  "type": "websocket",
+  "body": {
+    "event": "user_activity",
+    "user_id": "user-12345",
+    "action": "login",
+    "timestamp": "2025-01-21T09:00:00Z",
+    "metadata": {
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "location": "New York, NY"
+    }
+  },
+  "meta": {
+    "channel": "user-events",
+    "redis_host": "localhost",
+    "redis_port": 6379
+  }
+} 
