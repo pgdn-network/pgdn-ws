@@ -7,7 +7,7 @@ from .manager import notification_manager
 from .auth import default_auth_handler
 from .types import AuthHandler
 
-logger = logging.getLogger("pgdn-notify")
+logger = logging.getLogger("pgdn-ws")
 logger.setLevel(logging.INFO)
 
 def create_websocket_router(
@@ -41,10 +41,16 @@ def create_websocket_router(
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
                 return
             
-            logger.info(f"Auth result: {user_info.get('user_id')}")
+            user_id = user_info.get('user_id')
+            if not user_id:
+                logger.warning("Auth succeeded but no user_id in response")
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid user info")
+                return
+            
+            logger.info(f"Auth result: {user_id}")
             
             # Connect
-            logger.info(f"Connecting user: {user_info.get('user_id')}")
+            logger.info(f"Connecting user: {user_id}")
             await notification_manager.connect(websocket, user_info)
             
             # Handle messages
@@ -71,7 +77,7 @@ def create_websocket_router(
         except Exception as e:
             logger.error(f"WebSocket connection error: {e}", exc_info=True)
         finally:
-            if user_info:
+            if user_info and user_info.get('user_id'):
                 logger.info(f"Cleaning up connection for user: {user_info.get('user_id')}")
             notification_manager.disconnect(websocket)
     

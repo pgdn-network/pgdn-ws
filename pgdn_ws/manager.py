@@ -243,7 +243,8 @@ class NotificationManager:
         # Custom handlers
         handler = self._message_handlers.get(message_type)
         if handler:
-            await handler(message, user_info.get("user_id"))
+            user_id = user_info.get("user_id")
+            await handler(message, user_id)
     
     def get_stats(self) -> dict:
         """Get connection statistics"""

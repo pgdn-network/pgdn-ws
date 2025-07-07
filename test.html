@@ -23,24 +23,34 @@
             margin-bottom: 30px;
         }
         .status {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 20px;
             font-weight: 600;
             font-size: 14px;
+            color: #333;
         }
-        .connected {
-            background-color: #d4edda;
-            color: #155724;
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ccc;
+            transition: background-color 0.3s ease;
         }
-        .disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
+        .status.connected .status-dot {
+            background-color: #4CAF50;
         }
-        .connecting {
-            background-color: #fff3cd;
-            color: #856404;
+        .status.disconnected .status-dot {
+            background-color: #f44336;
+        }
+        .status.connecting .status-dot {
+            background-color: #ff9800;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         .controls {
             display: flex;
@@ -193,7 +203,10 @@
             <p>Make sure your FastAPI server is running with the WebSocket endpoint configured.</p>
         </div>
         
-        <div id="status" class="status disconnected">Disconnected</div>
+        <div id="status" class="status disconnected">
+            <div class="status-dot"></div>
+            <span>Disconnected</span>
+        </div>
         
         <div class="token-input-group">
             <input type="text" id="token" placeholder="Paste your JWT token here..." value="">
@@ -234,8 +247,9 @@
 
         function updateStatus(status, text) {
             const statusEl = document.getElementById('status');
+            const statusText = statusEl.querySelector('span');
             statusEl.className = `status ${status}`;
-            statusEl.textContent = text || status.charAt(0).toUpperCase() + status.slice(1);
+            statusText.textContent = text || status.charAt(0).toUpperCase() + status.slice(1);
         }
 
         function addMessage(data, type = 'info') {
