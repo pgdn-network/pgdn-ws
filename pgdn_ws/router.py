@@ -35,12 +35,13 @@ def create_websocket_router(
                 return
             
             user_info = await auth_fn(token)
-            logger.info(f"Auth result: {user_info.get('user_id')}")
             
             if not user_info:
                 logger.warning("Auth failed - invalid token")
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
                 return
+            
+            logger.info(f"Auth result: {user_info.get('user_id')}")
             
             # Connect
             logger.info(f"Connecting user: {user_info.get('user_id')}")

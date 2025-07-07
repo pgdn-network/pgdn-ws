@@ -4,7 +4,7 @@ from .client import NotificationClient, notify
 from .types import NotificationMessage, MessageType
 from .auth import default_auth_handler
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "NotificationManager",
