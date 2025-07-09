@@ -214,6 +214,107 @@ ws.onmessage = (event) => {
 };
 ```
 
+## Distributed WebSocket Session Tracking with Redis and Celery
+
+For large-scale deployments with multiple WebSocket servers, you can use Redis to track which server each client is connected to. This enables efficient message routing and robust cleanup of stale connections, especially in environments with preemptible servers.
+
+### 1. Install Redis Dependency
+
+```bash
+pip install 'redis>=4.2.0'
+```
+
+### 2. Track Client Connections with RedisSessionTracker
+
+Use the provided `RedisSessionTracker` utility:
+
+```python
+from pgdn_ws.redis_session import RedisSessionTracker
+import asyncio
+
+tracker = RedisSessionTracker(redis_url="redis://localhost:6379/0")
+await tracker.connect()
+
+# On client connect:
+await tracker.register_client(client_id, server_id, ttl=60)
+
+# On client disconnect:
+await tracker.unregister_client(client_id)
+
+# Start heartbeat (recommended for preemptible servers):
+asyncio.create_task(tracker.heartbeat(lambda: list_of_connected_client_ids(), server_id, ttl=60, interval=30))
+
+# On job arrival:
+owner = await tracker.get_client_server(client_id)
+if owner == server_id:
+    # Deliver to local client
+    ...
+```
+
+- Each server should have a unique `server_id` (hostname, IP, or UUID).
+- The heartbeat ensures that if a server is preempted or crashes, its client mappings expire automatically.
+
+### 3. Server Heartbeat for Liveness
+
+Each WebSocket server should also set a heartbeat key to indicate it is alive:
+
+```python
+# In each WebSocket server, run this periodically (e.g., every 30s)
+async def server_heartbeat(redis, server_id, ttl=60):
+    while True:
+        await redis.set(f"ws_server:{server_id}", "alive", ex=ttl)
+        await asyncio.sleep(ttl // 2)
+```
+
+### 4. Celery Cleanup Job for Stale Mappings
+
+Use Celery to periodically clean up stale client-server mappings in Redis:
+
+```python
+# cleanup.py
+from celery import Celery
+import redis.asyncio as redis
+import asyncio
+
+celery_app = Celery('cleanup', broker='redis://localhost:6379/0')
+
+@celery_app.task
+def cleanup_stale_clients():
+    async def _cleanup():
+        r = await redis.from_url("redis://localhost:6379/0", decode_responses=True)
+        keys = await r.keys("ws_client:*")
+        for key in keys:
+            server_id = await r.get(key)
+            if not server_id:
+                continue
+            server_alive = await r.exists(f"ws_server:{server_id}")
+            if not server_alive:
+                print(f"Cleaning up stale client mapping: {key} (was on {server_id})")
+                await r.delete(key)
+        await r.close()
+    asyncio.run(_cleanup())
+```
+
+- Schedule this Celery task to run every few minutes.
+- This ensures that if a server dies unexpectedly, any client mappings pointing to it are removed.
+
+### 5. Best Practices
+
+- Use a short TTL (e.g., 60 seconds) for both client and server keys.
+- Refresh TTLs frequently (every 30 seconds) via heartbeat.
+- Use unique, stable `server_id` values for each server instance.
+- Run the Celery cleanup job on a regular schedule (e.g., every 2-5 minutes).
+
+### 6. Example Workflow
+
+1. **Client connects:** Server registers client in Redis with TTL.
+2. **Server heartbeat:** Server sets its own liveness key in Redis with TTL.
+3. **Client disconnects:** Server removes client mapping from Redis.
+4. **Server crash:** Heartbeat and client keys expire automatically.
+5. **Celery cleanup:** Removes any stale client mappings pointing to dead servers.
+
+This pattern ensures robust, scalable, and self-healing WebSocket session tracking across many servers.
+
 ## API Reference
 
 ### NotificationClient Methods
